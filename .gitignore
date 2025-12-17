@@ -10,3 +10,6 @@ coverage.xml
 # database
 *.db
 *.sqlite3
+
+# E2E test reports
+reports/
