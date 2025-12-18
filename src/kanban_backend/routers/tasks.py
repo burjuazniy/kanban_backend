@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..db import get_session
@@ -19,6 +19,20 @@ async def create_task(
 
 
 @router.get("/")
-async def list_tasks(session: Annotated[AsyncSession, Depends(get_session)]) -> list[Task]:
+async def list_tasks(
+    session: Annotated[AsyncSession, Depends(get_session)]
+) -> list[Task]:
     result = await session.execute(select(Task))
     return [x for x in result.scalars().all()]
+
+
+@router.get("/{task_id}")
+async def get_task(
+    task_id: int,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> Task:
+    result = await session.execute(select(Task).where(Task.id == task_id))
+    task = result.scalar_one_or_none()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
